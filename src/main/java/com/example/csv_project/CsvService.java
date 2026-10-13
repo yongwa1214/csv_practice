@@ -20,12 +20,11 @@ import java.util.zip.ZipInputStream;
 public class CsvService {
 
     /**
-     * 특정 CSV 파일을 열었을 때 글자가 깨지는지 확인하고 수정하는 단독 테스트 메서드 (기존 유지)
-     * @param targetCsvPath 문제가 되는 CSV 파일
+     * 특정 단건 CSV 파일을 열었을 때 글자가 깨지는지 확인하고 수정하는 단독 테스트 메서드 (기존 유지)
      */
     public void testAndFixEncoding(MultipartFile targetCsvPath) {
         String originalFilename = targetCsvPath.getOriginalFilename();
-        String finalFileName = "unknown_file"; // 기본 이름
+        String finalFileName = "unknown_file";
 
         if (originalFilename != null) {
             String normalizedPath = originalFilename.replace("\\", "/");
@@ -43,8 +42,7 @@ public class CsvService {
 
         Charset charset = Charset.forName("MS932");
 
-        System.out.println("=== 파일 인코딩 읽기 시작: "
-                + targetCsvPath.getOriginalFilename() + " ===");
+        System.out.println("=== 파일 인코딩 읽기 시작: " + targetCsvPath.getOriginalFilename() + " ===");
 
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(targetCsvPath.getInputStream(), charset))) {
@@ -54,14 +52,12 @@ public class CsvService {
 
             while ((line = br.readLine()) != null) {
                 lineCount++;
-
                 if (lineCount <= 5) {
                     System.out.println("Line " + lineCount + ": " + line);
                 }
             }
 
-            System.out.println("=== 파일 읽기 성공! (총 "
-                    + lineCount + "줄) ===");
+            System.out.println("=== 파일 읽기 성공! (총 " + lineCount + "줄) ===");
 
         } catch (IOException e) {
             System.err.println("파일 읽기 실패: " + e.getMessage());
@@ -70,9 +66,7 @@ public class CsvService {
 
 
     /**
-     * 💡 [추가된 기능] 사용자가 업로드한 ZIP 파일을 서버의 임시 폴더에 안전하게 해제한 뒤,
-     * 내부 폴더를 순회하며 2번째 폴더 이름으로 CSV 파일을 식별하여 처리하는 메인 메서드
-     * @param zipFile 사용자가 업로드한 짚(ZIP) 압축 파일
+     * 1. ZIP 파일을 받아 서버 임시 공간에 압축을 풀고, 내부 폴더 순회 로직으로 연결하는 메인 메서드
      */
     public void processZipFile(MultipartFile zipFile) {
         if (zipFile == null || zipFile.isEmpty()) {
@@ -81,18 +75,18 @@ public class CsvService {
         }
 
         try {
-            // 1. 서버에 임시 디렉토리 생성
+            // 서버에 임시 디렉토리 생성
             Path tempDir = Files.createTempDirectory("csv_unzip_");
             System.out.println("=== ZIP 압축 해제 시작: " + zipFile.getOriginalFilename() + " ===");
 
-            // 2. ZIP 스트림을 열어 압축 해제 (일본어 파일명 깨짐 방지를 위해 MS932 또는 UTF-8 대응)
+            // ZIP 압축 해제 (일본어 파일명 깨짐 방지를 위해 MS932 적용)
             try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream(), Charset.forName("MS932"))) {
                 ZipEntry zipEntry;
 
                 while ((zipEntry = zis.getNextEntry()) != null) {
                     Path resolvedPath = tempDir.resolve(zipEntry.getName()).normalize();
 
-                    // 보안 취약점(Zip Slip) 방어 코드
+                    // 보안 취약점(Zip Slip) 방어
                     if (!resolvedPath.startsWith(tempDir)) {
                         throw new IOException("잘못된 경로의 ZIP 엔트리가 감지되었습니다: " + zipEntry.getName());
                     }
@@ -109,9 +103,9 @@ public class CsvService {
                 }
             }
 
-            System.out.println("=== ZIP 압축 해제 완료. 내부 CSV 파일 탐색 및 변환 시작 ===");
+            System.out.println("=== ZIP 압축 해제 완료. 내부 구조 분석 및 CSV 탐색 시작 ===");
 
-            // 3. 압축이 해제된 임시 폴더 경로를 기존의 디렉토리 순회 메서드로 전달!
+            // 해제된 임시 폴더 경로를 순회 메서드로 전달
             processAllCsvFiles(tempDir.toString());
 
         } catch (IOException e) {
@@ -121,9 +115,9 @@ public class CsvService {
 
 
     /**
-     * 최상위 집 폴더 경로를 입력받아 내부를 순회하며
-     * CSV 파일이 있는 폴더만 찾아내고, 2번째 폴더 이름을 추출해 처리하는 메서드
-     * @param rootDirectoryPath 최상위 집 폴더 경로
+     * 2. 압축 해제된 폴더 내부를 깊이 탐색하며:
+     *    - CSV가 없는 빈 폴더나 다른 폴더는 에러 없이 안전하게 건너뜀
+     *    - 계층 구조상 순서적 '2번째 폴더 이름'을 기억하여 고유한 파일명으로 매칭함
      */
     public void processAllCsvFiles(String rootDirectoryPath) {
         Path rootPath = Paths.get(rootDirectoryPath);
@@ -135,21 +129,28 @@ public class CsvService {
 
         try (Stream<Path> pathStream = Files.walk(rootPath)) {
             pathStream
-                    .filter(Files::isRegularFile)
-                    .filter(path -> path.toString().toLowerCase().endsWith(".csv"))
+                    .filter(Files::isRegularFile) // 파일인 것만 선택
+                    .filter(path -> path.toString().toLowerCase().endsWith(".csv")) // 확장자가 .csv인 파일만 골라냄
                     .forEach(csvPath -> {
                         try {
                             String secondFolderName = "unknown_folder";
 
+                            // 루트 경로 기준 상대 경로 추출
                             Path relativePath = rootPath.relativize(csvPath);
-                            if (relativePath.getNameCount() >= 2) {
+
+                            // 구조: [0번째: 1단계 폴더] / [1번째: 계층상 2번째 폴더] / [파일명.csv]
+                            if (relativePath.getNameCount() >= 3) {
+                                secondFolderName = relativePath.getName(1).toString(); // 💡 순서상 2번째 폴더 이름 획득!
+                            } else if (relativePath.getNameCount() == 2) {
                                 secondFolderName = relativePath.getName(0).toString();
                             }
 
+                            // 동일한 파일명을 계층상 2번째 폴더 이름으로 대체하여 고유 이름 지정
                             String finalExcelName = secondFolderName + ".xlsx";
-                            System.out.println("\n[처리 중] 발견된 파일: " + csvPath.getFileName()
-                                    + " -> 2번째 폴더명 적용 엑셀 이름: " + finalExcelName);
+                            System.out.println("\n[발견된 파일] " + csvPath.getFileName()
+                                    + " 👉 기억한 2번째 폴더명 적용 (저장될 파일명): " + finalExcelName);
 
+                            // MS932 인코딩을 적용해 내용 읽기 및 글자 깨짐 해결
                             readCsvWithEncoding(csvPath);
 
                         } catch (Exception e) {
@@ -162,8 +163,9 @@ public class CsvService {
         }
     }
 
+
     /**
-     * 개별 경로(Path)의 파일을 MS932 인코딩으로 안전하게 읽어 처리하는 내부 공통 메서드
+     * 3. 개별 CSV 파일을 MS932 인코딩으로 안전하게 읽어오는 공통 메서드
      */
     private void readCsvWithEncoding(Path filePath) {
         Charset charset = Charset.forName("MS932");
@@ -174,7 +176,7 @@ public class CsvService {
 
             while ((line = br.readLine()) != null) {
                 lineCount++;
-                if (lineCount <= 3) {
+                if (lineCount <= 3) { // 샘플로 상단 내용 확인
                     System.out.println("  > 샘플 내용 [" + lineCount + "]: " + line);
                 }
             }
