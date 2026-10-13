@@ -1,3 +1,7 @@
+constants:
+  file:
+    directory: C:\testCsv
+
 spring:
   application:
     name: csv_project

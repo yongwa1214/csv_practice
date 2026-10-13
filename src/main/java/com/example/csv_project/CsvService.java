@@ -2,12 +2,20 @@ package com.example.csv_project;
 
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,7 +59,19 @@ public class CsvService {
 
         } catch (IOException e) {
             System.err.println("파일 읽기 실패: " + e.getMessage());
+
         }
+
+
+
+
+
+
+
+
+
+
+
     }
 
 
@@ -72,95 +92,33 @@ public class CsvService {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     //TODO csv >> 엑셀로 전환
+    public void convertCsvToExcel(MultipartFile csvFile, Path xlsxPath) throws IOException {
+        Charset charset = Charset.forName("MS932");
+
+        try (
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(csvFile.getInputStream(), charset)
+                );
+                CSVParser parser = CSVParser.parse(reader, CSVFormat.DEFAULT);
+                Workbook workbook = new XSSFWorkbook()
+        ) {
+            Sheet sheet = workbook.createSheet("Sheet1");
+            int rowNum = 0;
+
+            for (CSVRecord record : parser) {
+                Row row = sheet.createRow(rowNum++);
+
+                for (int colNum = 0; colNum < record.size(); colNum++) {
+                    row.createCell(colNum).setCellValue(record.get(colNum));
+                }
+            }
+
+            try (OutputStream out = Files.newOutputStream(xlsxPath)) {
+                workbook.write(out);
+            }
+        }
+    }
 
 
 
