@@ -1,6 +1,7 @@
 package com.example.csv_project.common;
 
-import lombok.Value;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -14,7 +15,7 @@ public class MyFileUtils {
 
     public MyFileUtils(@Value("${constants.file.directory}") String uploadPath) {
         this.uploadPath = uploadPath;
-        //log.info("Upload Path: {}", uploadPath);
+        System.out.println("Upload Path: " + uploadPath);
     }
 
 

@@ -9,16 +9,20 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 @RestController
 @RequiredArgsConstructor
 public class CsvController {
 
     private final CsvService csvService;
+    private final ConvertExcelService convertExcelService;
 
     // test csv하나만 읽습니다.
     @PostMapping("api/csv/zip")
-    public ResponseEntity<?> sendZip (@RequestPart MultipartFile file){
-        csvService.testAndFixEncoding(file);
+    public ResponseEntity<?> sendZip (@RequestPart MultipartFile file) throws IOException {
+        //csvService.testAndFixEncoding(file);
+        convertExcelService.convertCsvToExcel(file);
         return ResponseEntity.ok("성공");
     }
 
