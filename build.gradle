@@ -19,6 +19,12 @@ repositories {
 }
 
 dependencies {
+    // CSV 파싱
+    implementation("org.apache.commons:commons-csv:1.14.1")
+
+    // Excel .xlsx 생성
+    implementation("org.apache.poi:poi-ooxml:5.4.1")
+
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
