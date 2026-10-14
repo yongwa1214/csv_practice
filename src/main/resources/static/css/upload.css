@@ -1,0 +1,328 @@
+
+:root {
+    font-family: "Pretendard", "Malgun Gothic", sans-serif;
+    color: #202938;
+    background: #f4f6fb;
+    font-synthesis: none;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    min-width: 560px;
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.app {
+    width: min(720px, calc(100% - 32px));
+    margin: 64px auto 16px;
+}
+
+/* 헤더 */
+.header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.logo {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: #315bea;
+    color: white;
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.header h1 {
+    margin: 0 0 6px;
+    font-size: 27px;
+    letter-spacing: -0.8px;
+}
+
+.header p {
+    margin: 0;
+    color: #778196;
+    font-size: 14px;
+}
+
+/* 업로드 카드 */
+.upload-card {
+    padding: 28px;
+    border: 1px solid #e7eaf1;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 12px 36px rgb(34 49 85 / 5%);
+}
+
+.card-heading,
+.file-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.card-heading {
+    margin-bottom: 20px;
+}
+
+.card-heading h2,
+.file-section-heading h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.file-count {
+    color: #778196;
+    font-size: 13px;
+}
+
+/* 파일 드롭 영역 */
+.drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 34px 16px 26px;
+    border: 2px dashed #d8deeb;
+    border-radius: 16px;
+    background: #fafbff;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.drop-zone.drag-over {
+    border-color: #315bea;
+    background: #eff3ff;
+}
+
+.upload-icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    border-radius: 20px;
+    background: #eaf0ff;
+    color: #315bea;
+}
+
+.upload-icon svg {
+    width: 34px;
+    height: 34px;
+}
+
+.drop-zone h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.drop-zone p {
+    margin: 0;
+    color: #818ba0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* 파일 선택 버튼 */
+.select-button {
+    margin-top: 20px;
+    padding: 11px 22px;
+    border: 0;
+    border-radius: 10px;
+    background: #315bea;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.select-button:hover:not(:disabled) {
+    background: #244bd0;
+}
+
+.drop-zone .hint {
+    margin-top: 15px;
+    font-size: 12px;
+}
+
+/* 선택한 파일 */
+.file-section {
+    margin-top: 28px;
+}
+
+.file-section-heading {
+    margin-bottom: 12px;
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.empty-state {
+    padding: 22px 12px;
+    border-radius: 10px;
+    background: #f8f9fc;
+    color: #929bad;
+    font-size: 13px;
+    text-align: center;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #edf0f5;
+    border-radius: 12px;
+}
+
+.file-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #eef2ff;
+    color: #315bea;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    overflow: hidden;
+    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    color: #8993a6;
+    font-size: 12px;
+}
+
+.remove-button {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #8b95a7;
+    font-size: 20px;
+}
+
+.remove-button:hover:not(:disabled) {
+    background: #fff0f0;
+    color: #d94848;
+}
+
+/* 업로드 로딩 스피너 */
+.upload-progress {
+    margin-top: 20px;
+}
+
+.loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    color: #555;
+    font-size: 14px;
+}
+
+.spinner {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 3px solid #e5e7eb;
+    border-top-color: #315bea;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.upload-progress[hidden] {
+    display: none;
+}
+
+/* 성공 및 오류 메시지 */
+.status-message {
+    margin-top: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.status-message:empty {
+    display: none;
+}
+
+.status-message.error {
+    color: #d93636;
+}
+
+.status-message.success {
+    color: #16834a;
+}
+
+/* 업로드 버튼 */
+.upload-button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 15px;
+    border: 0;
+    border-radius: 12px;
+    background: #315bea;
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.upload-button:not(:disabled):hover {
+    background: #244bd0;
+}
+
+/* 푸터 */
+.footer {
+    margin-top: 22px;
+    color: #9aa3b3;
+    font-size: 12px;
+    text-align: center;
+}
+
+

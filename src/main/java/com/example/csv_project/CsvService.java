@@ -11,6 +11,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -18,6 +20,23 @@ import java.util.zip.ZipInputStream;
 @Service
 @AllArgsConstructor
 public class CsvService {
+    private final ConvertExcelService convertExcelService;
+
+    //클래스 맨 상단에 추가된 바로 상위 폴더 이름 추출 및 HashSet 중복 검사 메서드
+    public boolean checkAndRegisterParentFolder(Path csvPath, Set<String> processedFolders) {
+        String parentFolderName = "unknown_folder";
+
+        // CSV 파일의 바로 상위 폴더(직속 부모) 객체 획득
+        Path parentPath = csvPath.getParent();
+        if (parentPath != null && parentPath.getFileName() != null) {
+            parentFolderName = parentPath.getFileName().toString();
+        }
+
+        // HashSet에 추가 시도 (새로운 값이면 true, 이미 존재하면 false 반환)
+        return processedFolders.add(parentFolderName);
+    }
+    //
+
 
     /**
      * 특정 단건 CSV 파일을 열었을 때 글자가 깨지는지 확인하고 수정하는 단독 테스트 메서드 (기존 유지)
@@ -38,7 +57,7 @@ public class CsvService {
             }
         }
 
-        System.out.println("=== 2번째 폴더 이름으로 바뀐 최종 파일명: " + finalFileName + ".xlsx ===");
+        System.out.println("=== 최종 파일명: " + finalFileName + ".xlsx ===");
 
         Charset charset = Charset.forName("MS932");
 
@@ -75,18 +94,15 @@ public class CsvService {
         }
 
         try {
-            // 서버에 임시 디렉토리 생성
             Path tempDir = Files.createTempDirectory("csv_unzip_");
             System.out.println("=== ZIP 압축 해제 시작: " + zipFile.getOriginalFilename() + " ===");
 
-            // ZIP 압축 해제 (일본어 파일명 깨짐 방지를 위해 MS932 적용)
             try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream(), Charset.forName("MS932"))) {
                 ZipEntry zipEntry;
 
                 while ((zipEntry = zis.getNextEntry()) != null) {
                     Path resolvedPath = tempDir.resolve(zipEntry.getName()).normalize();
 
-                    // 보안 취약점(Zip Slip) 방어
                     if (!resolvedPath.startsWith(tempDir)) {
                         throw new IOException("잘못된 경로의 ZIP 엔트리가 감지되었습니다: " + zipEntry.getName());
                     }
@@ -105,7 +121,6 @@ public class CsvService {
 
             System.out.println("=== ZIP 압축 해제 완료. 내부 구조 분석 및 CSV 탐색 시작 ===");
 
-            // 해제된 임시 폴더 경로를 순회 메서드로 전달
             processAllCsvFiles(tempDir.toString());
 
         } catch (IOException e) {
@@ -115,9 +130,7 @@ public class CsvService {
 
 
     /**
-     * 2. 압축 해제된 폴더 내부를 깊이 탐색하며:
-     *    - CSV가 없는 빈 폴더나 다른 폴더는 에러 없이 안전하게 건너뜀
-     *    - 계층 구조상 순서적 '2번째 폴더 이름'을 기억하여 고유한 파일명으로 매칭함
+     * 2. 압축 해제된 폴더 내부를 탐색하며 처리하는 메서드
      */
     public void processAllCsvFiles(String rootDirectoryPath) {
         Path rootPath = Paths.get(rootDirectoryPath);
@@ -127,31 +140,40 @@ public class CsvService {
             return;
         }
 
+        //중복 폴더명 체크를 위한 HashSet 선언부
+        Set<String> processedFolders = new HashSet<>();
+        //
+
         try (Stream<Path> pathStream = Files.walk(rootPath)) {
             pathStream
-                    .filter(Files::isRegularFile) // 파일인 것만 선택
-                    .filter(path -> path.toString().toLowerCase().endsWith(".csv")) // 확장자가 .csv인 파일만 골라냄
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.toString().toLowerCase().endsWith(".csv"))
                     .forEach(csvPath -> {
                         try {
-                            String secondFolderName = "unknown_folder";
+                            //상단 메서드 호출 및 중복 검사 로직
+                            boolean isNewFolder = checkAndRegisterParentFolder(csvPath, processedFolders);
 
-                            // 루트 경로 기준 상대 경로 추출
-                            Path relativePath = rootPath.relativize(csvPath);
-
-                            // 구조: [0번째: 1단계 폴더] / [1번째: 계층상 2번째 폴더] / [파일명.csv]
-                            if (relativePath.getNameCount() >= 3) {
-                                secondFolderName = relativePath.getName(1).toString(); // 💡 순서상 2번째 폴더 이름 획득!
-                            } else if (relativePath.getNameCount() == 2) {
-                                secondFolderName = relativePath.getName(0).toString();
+                            if (!isNewFolder) {
+                                System.out.println("  ⚠️ 중복된 상위 폴더명 감지됨. 이미 처리되었으므로 건너뜁니다.");
+                                return; // 중복이면 건너뜀
                             }
 
-                            // 동일한 파일명을 계층상 2번째 폴더 이름으로 대체하여 고유 이름 지정
-                            String finalExcelName = secondFolderName + ".xlsx";
-                            System.out.println("\n[발견된 파일] " + csvPath.getFileName()
-                                    + " 👉 기억한 2번째 폴더명 적용 (저장될 파일명): " + finalExcelName);
+                            // CSV 파일의 바로 상위 폴더 이름 가져와서 최종 엑셀 파일명 지정
+                            String parentFolderName = "unknown_folder";
+                            if (csvPath.getParent() != null && csvPath.getParent().getFileName() != null) {
+                                parentFolderName = csvPath.getParent().getFileName().toString();
+                            }
+                            String finalExcelName = parentFolderName + ".xlsx";
+                            //
 
-                            // MS932 인코딩을 적용해 내용 읽기 및 글자 깨짐 해결
+                            System.out.println("\n[발견된 파일] " + csvPath.getFileName()
+                                    + " 👉 기억한 바로 상위 폴더명 적용 (저장될 엑셀명): " + finalExcelName);
+
                             readCsvWithEncoding(csvPath);
+
+                            //convertExcelService 호출부
+                            convertExcelService.convertCsvToExcel(csvPath, finalExcelName);
+                            //
 
                         } catch (Exception e) {
                             System.err.println("파일 처리 중 에러 발생: " + csvPath + " / 원인: " + e.getMessage());
@@ -176,7 +198,7 @@ public class CsvService {
 
             while ((line = br.readLine()) != null) {
                 lineCount++;
-                if (lineCount <= 3) { // 샘플로 상단 내용 확인
+                if (lineCount <= 3) {
                     System.out.println("  > 샘플 내용 [" + lineCount + "]: " + line);
                 }
             }
@@ -186,7 +208,4 @@ public class CsvService {
             System.err.println("  ❌ 파일 읽기 실패: " + e.getMessage());
         }
     }
-
-    //TODO csv >> 엑셀로 전환
-
 }
