@@ -1,5 +1,6 @@
 package com.example.csv_project;
 
+import com.example.csv_project.common.MyFileUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +22,7 @@ import java.util.zip.ZipInputStream;
 @AllArgsConstructor
 public class CsvService {
     private final ConvertExcelService convertExcelService;
+    private final MyFileUtils   myFileUtils;
 
     //클래스 맨 상단에 추가된 바로 상위 폴더 이름 추출 및 HashSet 중복 검사 메서드
     public boolean checkAndRegisterParentFolder(Path csvPath, Set<String> processedFolders) {
@@ -35,55 +37,6 @@ public class CsvService {
         // HashSet에 추가 시도 (새로운 값이면 true, 이미 존재하면 false 반환)
         return processedFolders.add(parentFolderName);
     }
-    //
-
-
-    /**
-     * 특정 단건 CSV 파일을 열었을 때 글자가 깨지는지 확인하고 수정하는 단독 테스트 메서드 (기존 유지)
-     */
-    public void testAndFixEncoding(MultipartFile targetCsvPath) {
-        String originalFilename = targetCsvPath.getOriginalFilename();
-        String finalFileName = "unknown_file";
-
-        if (originalFilename != null) {
-            String normalizedPath = originalFilename.replace("\\", "/");
-            String[] pathSegments = normalizedPath.split("/");
-
-            if (pathSegments.length >= 3) {
-                int targetIndex = pathSegments.length - 2;
-                finalFileName = pathSegments[targetIndex];
-            } else if (pathSegments.length == 2) {
-                finalFileName = pathSegments[0];
-            }
-        }
-
-        System.out.println("=== 최종 파일명: " + finalFileName + ".xlsx ===");
-
-        Charset charset = Charset.forName("MS932");
-
-        System.out.println("=== 파일 인코딩 읽기 시작: " + targetCsvPath.getOriginalFilename() + " ===");
-
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(targetCsvPath.getInputStream(), charset))) {
-
-            String line;
-            int lineCount = 0;
-
-            while ((line = br.readLine()) != null) {
-                lineCount++;
-                if (lineCount <= 5) {
-                    System.out.println("Line " + lineCount + ": " + line);
-                }
-            }
-
-            System.out.println("=== 파일 읽기 성공! (총 " + lineCount + "줄) ===");
-
-        } catch (IOException e) {
-            System.err.println("파일 읽기 실패: " + e.getMessage());
-        }
-    }
-
-
     /**
      * 1. ZIP 파일을 받아 서버 임시 공간에 압축을 풀고, 내부 폴더 순회 로직으로 연결하는 메인 메서드
      */
@@ -94,8 +47,17 @@ public class CsvService {
         }
 
         try {
+            // 폴더 생성
+            String originName = zipFile.getOriginalFilename();
+            String filename = zipFile.getOriginalFilename().substring(0,originName.lastIndexOf("."));
+
+            myFileUtils.makeFolders(filename);
+
+            //집파일 열고
+
             Path tempDir = Files.createTempDirectory("csv_unzip_");
             System.out.println("=== ZIP 압축 해제 시작: " + zipFile.getOriginalFilename() + " ===");
+
 
             try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream(), Charset.forName("MS932"))) {
                 ZipEntry zipEntry;
