@@ -1,0 +1,338 @@
+:root {
+    font-family: "Pretendard", "Malgun Gothic", sans-serif;
+    color: #202938;
+    background: #f4f6fb;
+    font-synthesis: none;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    min-width: 570px;
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.app {
+    width: min(720px, calc(100% - 32px));
+    margin: 64px auto 32px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.logo {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: #315bea;
+    color: white;
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.header h1 {
+    margin: 0 0 6px;
+    font-size: 27px;
+    letter-spacing: -0.8px;
+}
+
+.header p {
+    margin: 0;
+    color: #778196;
+    font-size: 14px;
+}
+
+.upload-card {
+    padding: 28px;
+    border: 1px solid #e7eaf1;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 12px 36px rgb(34 49 85 / 5%);
+}
+
+.card-heading,
+.file-section-heading,
+.progress-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.card-heading {
+    margin-bottom: 20px;
+}
+
+.card-heading h2,
+.file-section-heading h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.file-count {
+    color: #778196;
+    font-size: 13px;
+}
+
+.drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 34px 16px 26px;
+    border: 2px dashed #d8deeb;
+    border-radius: 16px;
+    background: #fafbff;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.drop-zone.drag-over {
+    border-color: #315bea;
+    background: #eff3ff;
+}
+
+.upload-icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    border-radius: 20px;
+    background: #eaf0ff;
+    color: #315bea;
+}
+
+.upload-icon svg {
+    width: 34px;
+    height: 34px;
+}
+
+.drop-zone h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.drop-zone p {
+    margin: 0;
+    color: #818ba0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.select-button {
+    margin-top: 20px;
+    padding: 11px 22px;
+    border: 0;
+    border-radius: 10px;
+    background: #315bea;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.select-button:hover {
+    background: #244bd0;
+}
+
+.drop-zone .hint {
+    margin-top: 15px;
+    font-size: 12px;
+}
+
+.file-section {
+    margin-top: 28px;
+}
+
+.file-section-heading {
+    margin-bottom: 12px;
+}
+
+.text-button {
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    color: #6d7890;
+    font-size: 12px;
+}
+
+.text-button:hover {
+    color: #315bea;
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.empty-state {
+    padding: 22px 12px;
+    border-radius: 10px;
+    background: #f8f9fc;
+    color: #929bad;
+    font-size: 13px;
+    text-align: center;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #edf0f5;
+    border-radius: 12px;
+}
+
+.file-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #eef2ff;
+    color: #315bea;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    overflow: hidden;
+    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    color: #8993a6;
+    font-size: 12px;
+}
+
+.remove-button {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #8b95a7;
+    font-size: 20px;
+}
+
+.remove-button:hover {
+    background: #fff0f0;
+    color: #d94848;
+}
+
+.upload-progress {
+    margin-top: 24px;
+}
+
+.progress-heading {
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #65718a;
+}
+
+.progress-track {
+    overflow: hidden;
+    height: 7px;
+    border-radius: 20px;
+    background: #e9edf5;
+}
+
+.progress-bar {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: #315bea;
+    transition: width 0.15s;
+}
+
+.status-message {
+    margin-top: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.status-message:empty {
+    display: none;
+}
+
+.status-message.error {
+    color: #d93636;
+}
+
+.status-message.success {
+    color: #16834a;
+}
+
+.upload-button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 15px;
+    border: 0;
+    border-radius: 12px;
+    background: #315bea;
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.upload-button:not(:disabled):hover {
+    background: #244bd0;
+}
+
+.footer {
+    margin-top: 22px;
+    color: #9aa3b3;
+    font-size: 12px;
+    text-align: center;
+}
+
+@media (max-width: 520px) {
+    .app {
+        margin-top: 28px;
+    }
+
+    .upload-card {
+        padding: 18px;
+    }
+
+    .header h1 {
+        font-size: 23px;
+    }
+
+    .drop-zone {
+        padding: 28px 12px 22px;
+    }
+}

@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 업로드</title>
+
+    <link rel="stylesheet" th:href="@{/css/upload.css}">
+    <script th:src="@{/js/upload.js}" defer></script>
+</head>
+<body>
+<main class="app">
+    <header class="header">
+        <div class="logo">UP</div>
+        <div>
+            <h1>파일 업로드</h1>
+            <p>업로드할 파일을 선택해 주세요.</p>
+        </div>
+    </header>
+
+    <section class="upload-card">
+        <div class="card-heading">
+            <h2>파일 선택</h2>
+            <span class="file-count" id="fileCount">0개 선택</span>
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+            <input
+                    type="file"
+                    id="fileInput"
+                    name="file"
+                    accept=".zip"
+                    hidden
+            >
+
+            <div class="upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" fill="none">
+                    <path
+                            d="M24 31V9m0 0-8 8m8-8 8 8"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                    />
+                    <path
+                            d="M10 29v8a3 3 0 0 0 3 3h22a3 3 0 0 0 3-3v-8"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                    />
+                </svg>
+            </div>
+
+            <h3>파일을 여기에 끌어다 놓으세요</h3>
+            <p>또는 아래 버튼을 눌러 파일을 선택하세요.</p>
+
+            <button
+                    type="button"
+                    class="select-button"
+                    id="selectButton"
+            >
+                파일 선택
+            </button>
+
+            <p class="hint">ZIP 파일 하나만 선택할 수 있습니다.</p>
+        </div>
+
+        <div class="file-section">
+            <div class="file-section-heading">
+                <h3>선택한 파일</h3>
+            </div>
+
+            <ul class="file-list" id="fileList">
+                <li class="empty-state">선택한 파일이 없습니다.</li>
+            </ul>
+        </div>
+
+        <div class="upload-progress" id="progressSection" hidden>
+            <div class="progress-heading">
+                <span id="progressText">업로드 준비 중...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+
+            <div class="progress-track">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div
+                class="status-message"
+                id="statusMessage"
+                role="status"
+                aria-live="polite"
+        ></div>
+
+        <button
+                type="button"
+                class="upload-button"
+                id="uploadButton"
+                disabled
+        >
+            업로드 시작
+        </button>
+    </section>
+
+    <footer class="footer">
+        로컬 파일 업로드 도구
+    </footer>
+</main>
+</body>
+</html>

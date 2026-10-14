@@ -3,15 +3,13 @@ package com.example.csv_project;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
-@RestController
+@Controller
 @RequiredArgsConstructor
 public class CsvController {
 
@@ -19,11 +17,23 @@ public class CsvController {
     private final ConvertExcelService convertExcelService;
 
     // test csv하나만 읽습니다.
-    @PostMapping("api/csv/zip")
+    @PostMapping("/api/files/upload")
     public ResponseEntity<?> sendZip (@RequestPart MultipartFile file) throws IOException {
-        //csvService.testAndFixEncoding(file);
-        convertExcelService.convertCsvToExcel(file);
+        System.out.println("Uploading file: " + file.getOriginalFilename());
+        //확장자 검사
+        if (file.isEmpty()
+                || !file.getOriginalFilename().toLowerCase().endsWith(".zip")) {
+            return ResponseEntity.badRequest().body("ZIP 파일만 업로드할 수 있습니다.");
+        }
+        //csvService.testAndFixEncoding(file); // 활성화는 이쪽
+        //convertExcelService.convertCsvToExcel(file);
         return ResponseEntity.ok("성공");
+    }
+
+    //html 읽기
+    @GetMapping("/")
+    public String uploadPage() {
+        return "upload";
     }
 
 
