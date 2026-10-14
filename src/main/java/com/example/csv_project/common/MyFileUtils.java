@@ -4,6 +4,7 @@ package com.example.csv_project.common;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,25 +14,17 @@ import java.nio.file.Paths;
 public class MyFileUtils {
     private final String uploadPath;
 
-    public MyFileUtils(@Value("${constants.file.directory}") String uploadPath) {
+    public MyFileUtils(
+            @Value("${constants.file.directory}") String uploadPath) {
         this.uploadPath = uploadPath;
-        System.out.println("Upload Path: " + uploadPath);
     }
 
+    // fileTitle 이름으로 폴더 생성
+    public void makeFolders(String fileTitle) {
+        File folder = new File(uploadPath, fileTitle);
 
-
-    // 기본 저장 경로 반환
-    public String getUploadPath() {
-        return uploadPath;
-    }
-
-    // 폴더 생성
-    public void makeFolders(String path) throws IOException {
-        Files.createDirectories(Paths.get(uploadPath, path));
-    }
-
-    // 저장 경로 반환
-    public Path getPath(String path) {
-        return Paths.get(uploadPath, path);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
     }
 }

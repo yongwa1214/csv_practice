@@ -16,10 +16,9 @@ public class CsvController {
     private final CsvService csvService;
     private final ConvertExcelService convertExcelService;
 
-    // test csv하나만 읽습니다.
+    // 기능
     @PostMapping("/api/files/upload")
     public ResponseEntity<?> sendZip (@RequestPart MultipartFile file) throws IOException {
-        System.out.println("Uploading file: " + file.getOriginalFilename());
         //확장자 검사
         if (file.isEmpty()
                 || !file.getOriginalFilename().toLowerCase().endsWith(".zip")) {

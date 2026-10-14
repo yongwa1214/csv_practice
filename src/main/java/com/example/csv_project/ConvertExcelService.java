@@ -42,25 +42,25 @@ public class ConvertExcelService {
                 StandardCharsets.UTF_8
         );
 
-
-        CSVParser parser = CSVParser.parse(csvContent, CSVFormat.DEFAULT);
         Workbook workbook = new XSSFWorkbook();
 
-        Sheet sheet = workbook.createSheet("Sheet1");
-        int rowNum = 0;
+        try (CSVParser parser = CSVParser.parse(csvContent, CSVFormat.DEFAULT)) {
+            Sheet sheet = workbook.createSheet("Sheet1");
+            int rowNum = 0;
 
-        for (CSVRecord record : parser) {
-            Row row = sheet.createRow(rowNum++);
+            for (CSVRecord record : parser) {
+                Row row = sheet.createRow(rowNum++);
 
-            for (int colNum = 0; colNum < record.size(); colNum++) {
-                row.createCell(colNum).setCellValue(record.get(colNum));
+                for (int colNum = 0; colNum < record.size(); colNum++) {
+                    row.createCell(colNum).setCellValue(record.get(colNum));
+                }
             }
+            return workbook;
+        } catch (IOException | RuntimeException e) {
+            // 변환 도중 실패하면 workbook이 누수되지 않도록 닫는다
+            workbook.close();
+            throw e;
         }
-
-        parser.close();
-
-        return workbook;
     }
 }
-
 
