@@ -2,6 +2,7 @@ package com.example.csv_project;
 
 import com.example.csv_project.common.MyFileUtils;
 import lombok.AllArgsConstructor;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -97,11 +98,11 @@ public class CsvService {
     public void processAllCsvFiles(String rootDirectoryPath) {
         Path rootPath = Paths.get(rootDirectoryPath);
 
-        if (!Files.exists(rootPath) || !Files.isDirectory(rootPath)) {
+/*        if (!Files.exists(rootPath) || !Files.isDirectory(rootPath)) {
             System.err.println("유효하지 않은 디렉토리 경로입니다: " + rootDirectoryPath);
             return;
         }
-
+*/
         //중복 폴더명 체크를 위한 HashSet 선언부
         Set<String> processedFolders = new HashSet<>();
         //
@@ -112,9 +113,16 @@ public class CsvService {
                     .filter(path -> path.toString().toLowerCase().endsWith(".csv"))
                     .forEach(csvPath -> {
                         try {
-                            //상단 메서드 호출 및 중복 검사 로직
-                            boolean isNewFolder = checkAndRegisterParentFolder(csvPath, processedFolders);
 
+
+                            //1. 상위폴더명 저장 변수
+
+                            //2. set add >> 중복 검사 true >> 진행 false >> 건너뛰기
+
+                            // 3. 매개변수는 .csv 파일
+                            Workbook workbook =  convertExcelService.convertCsvToExcel();
+
+                            //4. 저장
                             if (!isNewFolder) {
                                 System.out.println("  ⚠️ 중복된 상위 폴더명 감지됨. 이미 처리되었으므로 건너뜁니다.");
                                 return; // 중복이면 건너뜀
@@ -131,10 +139,9 @@ public class CsvService {
                             System.out.println("\n[발견된 파일] " + csvPath.getFileName()
                                     + " 👉 기억한 바로 상위 폴더명 적용 (저장될 엑셀명): " + finalExcelName);
 
-                            readCsvWithEncoding(csvPath);
-
                             //convertExcelService 호출부
-                            convertExcelService.convertCsvToExcel(csvPath, finalExcelName);
+                            // 매개변수는 .csv 파일을 전달해주세요
+                            Workbook workbook =  convertExcelService.convertCsvToExcel(csvPath, finalExcelName);
                             //
 
                         } catch (Exception e) {
