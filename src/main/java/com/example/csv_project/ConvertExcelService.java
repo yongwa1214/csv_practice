@@ -25,19 +25,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Service
-@AllArgsConstructor
 public class ConvertExcelService {
-    private final MyFileUtils myFileUtils;
 
-    public void convertCsvToExcel(MultipartFile csvFile) throws IOException {
+    /**
+     * 다음 함수는 .csv 파일을 .xlsx로 반환합니다.
+     * 호출한 쪽에서 파일명을 설정하고 폴더에 저장하시면 됩니다.
+    * */
+    public Workbook convertCsvToExcel(MultipartFile csvFile) throws IOException {
 
         // UTF-8의 csv파일은 아래로 하면 해당 안된다.
         //Charset charset = Charset.forName("MS932");
-
-        String originalFileName = csvFile.getOriginalFilename();
-        String excelFileName = originalFileName.replaceFirst("(?i)\\.csv$", ".xlsx");
-
-        Path excelPath = myFileUtils.getPath(excelFileName);
 
         // CSV 파일을 UTF-8로 읽기
         String csvContent = new String(
@@ -45,25 +42,24 @@ public class ConvertExcelService {
                 StandardCharsets.UTF_8
         );
 
-        try (
-                CSVParser parser = CSVParser.parse(csvContent, CSVFormat.DEFAULT);
-                Workbook workbook = new XSSFWorkbook()
-        ) {
-            Sheet sheet = workbook.createSheet("Sheet1");
-            int rowNum = 0;
 
-            for (CSVRecord record : parser) {
-                Row row = sheet.createRow(rowNum++);
+        CSVParser parser = CSVParser.parse(csvContent, CSVFormat.DEFAULT);
+        Workbook workbook = new XSSFWorkbook();
 
-                for (int colNum = 0; colNum < record.size(); colNum++) {
-                    row.createCell(colNum).setCellValue(record.get(colNum));
-                }
-            }
+        Sheet sheet = workbook.createSheet("Sheet1");
+        int rowNum = 0;
 
-            try (OutputStream out = Files.newOutputStream(excelPath)) {
-                workbook.write(out);
+        for (CSVRecord record : parser) {
+            Row row = sheet.createRow(rowNum++);
+
+            for (int colNum = 0; colNum < record.size(); colNum++) {
+                row.createCell(colNum).setCellValue(record.get(colNum));
             }
         }
+
+        parser.close();
+
+        return workbook;
     }
 }
 
