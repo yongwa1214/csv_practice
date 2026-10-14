@@ -148,26 +148,5 @@ public class CsvService {
     }
 
 
-    /**
-     * 3. 개별 CSV 파일을 MS932 인코딩으로 안전하게 읽어오는 공통 메서드
-     */
-    private void readCsvWithEncoding(Path filePath) {
-        Charset charset = Charset.forName("MS932");
 
-        try (BufferedReader br = Files.newBufferedReader(filePath, charset)) {
-            String line;
-            int lineCount = 0;
-
-            while ((line = br.readLine()) != null) {
-                lineCount++;
-                if (lineCount <= 3) {
-                    System.out.println("  > 샘플 내용 [" + lineCount + "]: " + line);
-                }
-            }
-            System.out.println("  ✔ 읽기 완료 (총 " + lineCount + "줄)");
-
-        } catch (IOException e) {
-            System.err.println("  ❌ 파일 읽기 실패: " + e.getMessage());
-        }
-    }
 }
