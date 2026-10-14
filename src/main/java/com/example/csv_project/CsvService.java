@@ -11,27 +11,44 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Service
 @AllArgsConstructor
 public class CsvService {
+    private final ConvertExcelService convertExcelService;
 
-    //TODO zip 파일 분석 : bear
+    //클래스 맨 상단에 추가된 바로 상위 폴더 이름 추출 및 HashSet 중복 검사 메서드
+    public boolean checkAndRegisterParentFolder(Path csvPath, Set<String> processedFolders) {
+        String parentFolderName = "unknown_folder";
+
+        // CSV 파일의 바로 상위 폴더(직속 부모) 객체 획득
+        Path parentPath = csvPath.getParent();
+        if (parentPath != null && parentPath.getFileName() != null) {
+            parentFolderName = parentPath.getFileName().toString();
+        }
+
+        // HashSet에 추가 시도 (새로운 값이면 true, 이미 존재하면 false 반환)
+        return processedFolders.add(parentFolderName);
+    }
+    //
+
+
     /**
-     * 특정 CSV 파일을 열었을 때 글자가 깨지는지 확인하고 수정하는 단독 테스트 메서드 (기존 유지)
-     * @param targetCsvPath 문제가 되는 CSV 파일
+     * 특정 단건 CSV 파일을 열었을 때 글자가 깨지는지 확인하고 수정하는 단독 테스트 메서드 (기존 유지)
      */
     public void testAndFixEncoding(MultipartFile targetCsvPath) {
         String originalFilename = targetCsvPath.getOriginalFilename();
-        String finalFileName = "unknown_file"; // 기본 이름
+        String finalFileName = "unknown_file";
 
         if (originalFilename != null) {
-            // 경로 구분자 표준화 (윈도우의 \ 기호를 / 로 변경)
             String normalizedPath = originalFilename.replace("\\", "/");
             String[] pathSegments = normalizedPath.split("/");
 
-            // 2번째 폴더 이름을 추출해서 파일 이름으로 지정 (마이너스 기호 줄바꿈 이슈 방지)
             if (pathSegments.length >= 3) {
                 int targetIndex = pathSegments.length - 2;
                 finalFileName = pathSegments[targetIndex];
@@ -40,13 +57,11 @@ public class CsvService {
             }
         }
 
-        System.out.println("=== 2번째 폴더 이름으로 바뀐 최종 파일명: " + finalFileName + ".xlsx ===");
+        System.out.println("=== 최종 파일명: " + finalFileName + ".xlsx ===");
 
-        // 윈도우/일본어 환경의 MS932 인코딩 적용 (기존 유지)
         Charset charset = Charset.forName("MS932");
 
-        System.out.println("=== 파일 인코딩 읽기 시작: "
-                + targetCsvPath.getOriginalFilename() + " ===");
+        System.out.println("=== 파일 인코딩 읽기 시작: " + targetCsvPath.getOriginalFilename() + " ===");
 
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(targetCsvPath.getInputStream(), charset))) {
@@ -54,17 +69,14 @@ public class CsvService {
             String line;
             int lineCount = 0;
 
-            // 한 줄씩 읽으면서 처음 5줄만 출력 (기존 유지)
             while ((line = br.readLine()) != null) {
                 lineCount++;
-
                 if (lineCount <= 5) {
                     System.out.println("Line " + lineCount + ": " + line);
                 }
             }
 
-            System.out.println("=== 파일 읽기 성공! (총 "
-                    + lineCount + "줄) ===");
+            System.out.println("=== 파일 읽기 성공! (총 " + lineCount + "줄) ===");
 
         } catch (IOException e) {
             System.err.println("파일 읽기 실패: " + e.getMessage());
@@ -73,9 +85,52 @@ public class CsvService {
 
 
     /**
-     * 💡 최상위 집 폴더 경로를 입력받아 내부를 순회하며
-     * CSV 파일이 있는 폴더만 찾아내고, 2번째 폴더 이름을 추출해 처리하는 메서드
-     * @param rootDirectoryPath 최상위 집 폴더 경로 (예: "C:/my_root_folder")
+     * 1. ZIP 파일을 받아 서버 임시 공간에 압축을 풀고, 내부 폴더 순회 로직으로 연결하는 메인 메서드
+     */
+    public void processZipFile(MultipartFile zipFile) {
+        if (zipFile == null || zipFile.isEmpty()) {
+            System.err.println("업로드된 ZIP 파일이 비어 있거나 존재하지 않습니다.");
+            return;
+        }
+
+        try {
+            Path tempDir = Files.createTempDirectory("csv_unzip_");
+            System.out.println("=== ZIP 압축 해제 시작: " + zipFile.getOriginalFilename() + " ===");
+
+            try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream(), Charset.forName("MS932"))) {
+                ZipEntry zipEntry;
+
+                while ((zipEntry = zis.getNextEntry()) != null) {
+                    Path resolvedPath = tempDir.resolve(zipEntry.getName()).normalize();
+
+                    if (!resolvedPath.startsWith(tempDir)) {
+                        throw new IOException("잘못된 경로의 ZIP 엔트리가 감지되었습니다: " + zipEntry.getName());
+                    }
+
+                    if (zipEntry.isDirectory()) {
+                        Files.createDirectories(resolvedPath);
+                    } else {
+                        if (resolvedPath.getParent() != null) {
+                            Files.createDirectories(resolvedPath.getParent());
+                        }
+                        Files.copy(zis, resolvedPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    }
+                    zis.closeEntry();
+                }
+            }
+
+            System.out.println("=== ZIP 압축 해제 완료. 내부 구조 분석 및 CSV 탐색 시작 ===");
+
+            processAllCsvFiles(tempDir.toString());
+
+        } catch (IOException e) {
+            System.err.println("ZIP 파일 처리 중 에러 발생: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * 2. 압축 해제된 폴더 내부를 탐색하며 처리하는 메서드
      */
     public void processAllCsvFiles(String rootDirectoryPath) {
         Path rootPath = Paths.get(rootDirectoryPath);
@@ -85,28 +140,40 @@ public class CsvService {
             return;
         }
 
-        // 폴더 내부를 깊이 탐색하며 파일들을 순회
+        //중복 폴더명 체크를 위한 HashSet 선언부
+        Set<String> processedFolders = new HashSet<>();
+        //
+
         try (Stream<Path> pathStream = Files.walk(rootPath)) {
             pathStream
-                    .filter(Files::isRegularFile) // 파일인 것만 선택 (폴더 자체는 제외)
-                    .filter(path -> path.toString().toLowerCase().endsWith(".csv")) // 확장자가 .csv인 파일만 골라냄
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.toString().toLowerCase().endsWith(".csv"))
                     .forEach(csvPath -> {
                         try {
-                            String secondFolderName = "unknown_folder";
+                            //상단 메서드 호출 및 중복 검사 로직
+                            boolean isNewFolder = checkAndRegisterParentFolder(csvPath, processedFolders);
 
-                            // 루트 경로와의 상대적 위치를 고려하여 상위 폴더명 추출
-                            Path relativePath = rootPath.relativize(csvPath);
-                            if (relativePath.getNameCount() >= 2) {
-                                secondFolderName = relativePath.getName(0).toString();
+                            if (!isNewFolder) {
+                                System.out.println("  ⚠️ 중복된 상위 폴더명 감지됨. 이미 처리되었으므로 건너뜁니다.");
+                                return; // 중복이면 건너뜀
                             }
 
-                            // 동일한 파일명(messages.csv 등)을 2번째 폴더 이름으로 대체
-                            String finalExcelName = secondFolderName + ".xlsx";
-                            System.out.println("\n[처리 중] 발견된 파일: " + csvPath.getFileName()
-                                    + " -> 2번째 폴더명 적용 엑셀 이름: " + finalExcelName);
+                            // CSV 파일의 바로 상위 폴더 이름 가져와서 최종 엑셀 파일명 지정
+                            String parentFolderName = "unknown_folder";
+                            if (csvPath.getParent() != null && csvPath.getParent().getFileName() != null) {
+                                parentFolderName = csvPath.getParent().getFileName().toString();
+                            }
+                            String finalExcelName = parentFolderName + ".xlsx";
+                            //
 
-                            // 기존에 만들었던 인코딩 및 읽기 로직 수행 (MS932 적용)
+                            System.out.println("\n[발견된 파일] " + csvPath.getFileName()
+                                    + " 👉 기억한 바로 상위 폴더명 적용 (저장될 엑셀명): " + finalExcelName);
+
                             readCsvWithEncoding(csvPath);
+
+                            //convertExcelService 호출부
+                            convertExcelService.convertCsvToExcel(csvPath, finalExcelName);
+                            //
 
                         } catch (Exception e) {
                             System.err.println("파일 처리 중 에러 발생: " + csvPath + " / 원인: " + e.getMessage());
@@ -118,8 +185,9 @@ public class CsvService {
         }
     }
 
+
     /**
-     * 개별 경로(Path)의 파일을 MS932 인코딩으로 안전하게 읽어 처리하는 내부 공통 메서드
+     * 3. 개별 CSV 파일을 MS932 인코딩으로 안전하게 읽어오는 공통 메서드
      */
     private void readCsvWithEncoding(Path filePath) {
         Charset charset = Charset.forName("MS932");
@@ -130,7 +198,7 @@ public class CsvService {
 
             while ((line = br.readLine()) != null) {
                 lineCount++;
-                if (lineCount <= 3) { // 샘플로 3줄만 확인
+                if (lineCount <= 3) {
                     System.out.println("  > 샘플 내용 [" + lineCount + "]: " + line);
                 }
             }
@@ -140,7 +208,4 @@ public class CsvService {
             System.err.println("  ❌ 파일 읽기 실패: " + e.getMessage());
         }
     }
-
-    //TODO csv >> 엑셀로 전환
-
 }
