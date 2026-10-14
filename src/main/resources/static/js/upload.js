@@ -7,9 +7,7 @@ const fileCount = document.getElementById("fileCount");
 const uploadButton = document.getElementById("uploadButton");
 
 const progressSection = document.getElementById("progressSection");
-const progressBar = document.getElementById("progressBar");
 const progressText = document.getElementById("progressText");
-const progressPercent = document.getElementById("progressPercent");
 const statusMessage = document.getElementById("statusMessage");
 
 const UPLOAD_URL = "/api/files/upload";
@@ -43,9 +41,7 @@ const showStatus = (message, type = "") => {
 // 진행 표시창 초기화
 const resetProgress = () => {
     progressSection.hidden = true;
-    progressBar.style.width = "0%";
-    progressPercent.textContent = "0%";
-    progressText.textContent = "업로드 준비 중...";
+    progressText.textContent = "업로드 중...";
 };
 
 // ZIP 확장자 검사
@@ -205,8 +201,6 @@ const uploadFile = async () => {
 
     // 업로드 중 표시
     progressSection.hidden = false;
-    progressBar.style.width = "0%";
-    progressPercent.textContent = "0%";
     progressText.textContent = "업로드 중...";
 
     showStatus("");
@@ -229,9 +223,7 @@ const uploadFile = async () => {
         }
 
         // 업로드 성공
-        progressBar.style.width = "100%";
-        progressPercent.textContent = "100%";
-        progressText.textContent = "업로드 완료";
+        // progressText.textContent = "업로드 완료";
 
         showStatus(
             responseText || "파일 업로드가 완료되었습니다.",
@@ -252,16 +244,15 @@ const uploadFile = async () => {
         );
 
     } finally {
-        // 요청 종료 후 버튼 복구
         uploading = false;
 
         fileInput.disabled = false;
         selectButton.disabled = false;
 
-        renderFile();
+        // 로딩 표시 제거
+        progressSection.hidden = true;
 
-        // 진행 표시창은 여기서 초기화하지 않음
-        // 새 파일을 선택할 때 resetProgress() 실행
+        renderFile();
     }
 };
 

@@ -1,3 +1,4 @@
+
 :root {
     font-family: "Pretendard", "Malgun Gothic", sans-serif;
     color: #202938;
@@ -12,7 +13,7 @@
 body {
     margin: 0;
     min-height: 100vh;
-    min-width: 570px;
+    min-width: 560px;
 }
 
 button {
@@ -27,9 +28,10 @@ button:disabled {
 
 .app {
     width: min(720px, calc(100% - 32px));
-    margin: 64px auto 32px;
+    margin: 64px auto 16px;
 }
 
+/* 헤더 */
 .header {
     display: flex;
     align-items: center;
@@ -61,6 +63,7 @@ button:disabled {
     font-size: 14px;
 }
 
+/* 업로드 카드 */
 .upload-card {
     padding: 28px;
     border: 1px solid #e7eaf1;
@@ -70,8 +73,7 @@ button:disabled {
 }
 
 .card-heading,
-.file-section-heading,
-.progress-heading {
+.file-section-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -93,6 +95,7 @@ button:disabled {
     font-size: 13px;
 }
 
+/* 파일 드롭 영역 */
 .drop-zone {
     display: flex;
     flex-direction: column;
@@ -138,6 +141,7 @@ button:disabled {
     line-height: 1.6;
 }
 
+/* 파일 선택 버튼 */
 .select-button {
     margin-top: 20px;
     padding: 11px 22px;
@@ -149,7 +153,7 @@ button:disabled {
     font-weight: 700;
 }
 
-.select-button:hover {
+.select-button:hover:not(:disabled) {
     background: #244bd0;
 }
 
@@ -158,24 +162,13 @@ button:disabled {
     font-size: 12px;
 }
 
+/* 선택한 파일 */
 .file-section {
     margin-top: 28px;
 }
 
 .file-section-heading {
     margin-bottom: 12px;
-}
-
-.text-button {
-    padding: 6px 0;
-    border: 0;
-    background: transparent;
-    color: #6d7890;
-    font-size: 12px;
-}
-
-.text-button:hover {
-    color: #315bea;
 }
 
 .file-list {
@@ -248,36 +241,47 @@ button:disabled {
     font-size: 20px;
 }
 
-.remove-button:hover {
+.remove-button:hover:not(:disabled) {
     background: #fff0f0;
     color: #d94848;
 }
 
+/* 업로드 로딩 스피너 */
 .upload-progress {
-    margin-top: 24px;
+    margin-top: 20px;
 }
 
-.progress-heading {
-    margin-bottom: 10px;
-    font-size: 12px;
-    color: #65718a;
+.loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    color: #555;
+    font-size: 14px;
 }
 
-.progress-track {
-    overflow: hidden;
-    height: 7px;
-    border-radius: 20px;
-    background: #e9edf5;
+.spinner {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 3px solid #e5e7eb;
+    border-top-color: #315bea;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
 
-.progress-bar {
-    width: 0;
-    height: 100%;
-    border-radius: inherit;
-    background: #315bea;
-    transition: width 0.15s;
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
+.upload-progress[hidden] {
+    display: none;
+}
+
+/* 성공 및 오류 메시지 */
 .status-message {
     margin-top: 16px;
     font-size: 13px;
@@ -296,6 +300,7 @@ button:disabled {
     color: #16834a;
 }
 
+/* 업로드 버튼 */
 .upload-button {
     width: 100%;
     margin-top: 24px;
@@ -312,6 +317,7 @@ button:disabled {
     background: #244bd0;
 }
 
+/* 푸터 */
 .footer {
     margin-top: 22px;
     color: #9aa3b3;
@@ -319,20 +325,4 @@ button:disabled {
     text-align: center;
 }
 
-@media (max-width: 520px) {
-    .app {
-        margin-top: 28px;
-    }
 
-    .upload-card {
-        padding: 18px;
-    }
-
-    .header h1 {
-        font-size: 23px;
-    }
-
-    .drop-zone {
-        padding: 28px 12px 22px;
-    }
-}

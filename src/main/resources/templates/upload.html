@@ -77,13 +77,11 @@
         </div>
 
         <div class="upload-progress" id="progressSection" hidden>
-            <div class="progress-heading">
-                <span id="progressText">업로드 준비 중...</span>
-                <span id="progressPercent">0%</span>
-            </div>
-
-            <div class="progress-track">
-                <div class="progress-bar" id="progressBar"></div>
+            <div class="loading-indicator">
+                <div class="spinner" aria-hidden="true"></div>
+                <span id="progressText" role="status" aria-live="polite">
+            업로드 중...
+        </span>
             </div>
         </div>
 

@@ -31,6 +31,7 @@ public class ConvertExcelService {
 
     public void convertCsvToExcel(MultipartFile csvFile) throws IOException {
 
+        // UTF-8의 csv파일은 아래로 하면 해당 안된다.
         //Charset charset = Charset.forName("MS932");
 
         String originalFileName = csvFile.getOriginalFilename();

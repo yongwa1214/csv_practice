@@ -27,7 +27,7 @@ public class CsvController {
         }
         //csvService.testAndFixEncoding(file); // 활성화는 이쪽
         //convertExcelService.convertCsvToExcel(file);
-        return ResponseEntity.ok("성공");
+        return ResponseEntity.ok("完了しました");
     }
 
     //html 읽기
