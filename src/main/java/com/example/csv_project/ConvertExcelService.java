@@ -59,7 +59,7 @@ public class ConvertExcelService {
         } catch (IOException | RuntimeException e) {
             // 변환 도중 실패하면 workbook이 누수되지 않도록 닫는다
             workbook.close();
-            throw e;
+            throw new RuntimeException("변환 실패",e);
         }
     }
 }
