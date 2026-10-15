@@ -26,19 +26,6 @@ public class CsvService {
     private final ConvertExcelService convertExcelService;
     private final MyFileUtils   myFileUtils;
 
-    //클래스 맨 상단에 추가된 바로 상위 폴더 이름 추출 및 HashSet 중복 검사 메서드
-    public boolean checkAndRegisterParentFolder(Path csvPath, Set<String> processedFolders) {
-        String parentFolderName = "unknown_folder";
-
-        // CSV 파일의 바로 상위 폴더(직속 부모) 객체 획득
-        Path parentPath = csvPath.getParent();
-        if (parentPath != null && parentPath.getFileName() != null) {
-            parentFolderName = parentPath.getFileName().toString();
-        }
-
-        // HashSet에 추가 시도 (새로운 값이면 true, 이미 존재하면 false 반환)
-        return processedFolders.add(parentFolderName);
-    }
     /**
      * 1. ZIP 파일을 받아 서버 임시 공간에 압축을 풀고, 내부 폴더 순회 로직으로 연결하는 메인 메서드
      */
@@ -53,7 +40,7 @@ public class CsvService {
             String originName = zipFile.getOriginalFilename();
             String filename = zipFile.getOriginalFilename().substring(0,originName.lastIndexOf("."));
 
-            myFileUtils.makeFolders(filename);
+            Path savePath = myFileUtils.makeFolders(filename);
 
             //집파일 열고
 
@@ -85,7 +72,7 @@ public class CsvService {
 
             System.out.println("=== ZIP 압축 해제 완료. 내부 구조 분석 및 CSV 탐색 시작 ===");
 
-            int result = processAllCsvFiles(tempDir.toString());
+            int result = processAllCsvFiles(tempDir,savePath );
 
         } catch (IOException e) {
             System.err.println("ZIP 파일 처리 중 에러 발생: " + e.getMessage());
@@ -96,9 +83,7 @@ public class CsvService {
     /**
      * 2. 압축 해제된 폴더 내부를 탐색하며 처리하는 메서드
      */
-    private int processAllCsvFiles(String rootDirectoryPath, Path savePath) {
-        Path rootPath = Paths.get(rootDirectoryPath);
-
+    private int processAllCsvFiles(Path rootPath, Path savePath) {
 /*        if (!Files.exists(rootPath) || !Files.isDirectory(rootPath)) {
             System.err.println("유효하지 않은 디렉토리 경로입니다: " + rootDirectoryPath);
             return;
@@ -114,8 +99,6 @@ public class CsvService {
                     .filter(path -> path.toString().toLowerCase().endsWith(".csv"))
                     .forEach(csvPath -> {
                         try {
-
-
                             //1. 상위폴더명 저장 변수
                             // CSV 파일의 바로 상위 폴더 이름 가져와서 최종 엑셀 파일명 지정
                             String parentFolderName = "unknown_folder";
@@ -132,7 +115,7 @@ public class CsvService {
 
                             //convertExcelService 호출부
 
-                            Workbook workbook =  convertExcelService.convertCsvToExcel(csvPath);
+                            Workbook workbook = convertExcelService.convertCsvToExcel(csvPath);
 
                             //TODO : workbook 저장
                             //저장 경로 + 변경 파일명.xlsx | changeTitle을 선언할 것
@@ -140,9 +123,8 @@ public class CsvService {
 
                             OutputStream outputStream = Files.newOutputStream(excelPath);
                             workbook.write(outputStream);
-                            outputStream.close();;
+                            outputStream.close();
                             workbook.close();
-
 
 
                         } catch (Exception e) {
@@ -153,6 +135,7 @@ public class CsvService {
 
         } catch (IOException e) {
             System.err.println("디렉토리 순회 중 에러 발생: " + e.getMessage());
+            return 1;
         }
     }
 
