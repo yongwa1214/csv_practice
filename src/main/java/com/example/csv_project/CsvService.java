@@ -114,7 +114,7 @@ public class CsvService {
 
                             //2. set add >> 중복 검사 true >> 진행 false >> 건너뛰기
                             if (!processedFolders.add(parentFolderName)) {
-                                System.out.println("  ⚠️ 중복된 상위 폴더명 감지됨. 이미 처리되었으므로 건너뜁니다.");
+                                System.out.printf("  ⚠️ 중복된 상위 폴더명 감지됨. 이미 처리되었으므로 건너뜁니다. 파일명: %s\n", parentFolderName);
                                 return; // 중복이면 건너뜀
                             }
                             // 3. 매개변수는 .csv 파일

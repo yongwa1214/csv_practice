@@ -44,7 +44,13 @@ public class ConvertExcelService {
                 Row row = sheet.createRow(rowNum++);
 
                 for (int colNum = 0; colNum < record.size(); colNum++) {
-                    row.createCell(colNum).setCellValue(record.get(colNum));
+                    String value = record.get(colNum);
+
+                    if (colNum == record.size() - 1 && value.length() > 32767) {
+                        value = value.substring(0, 32767);
+                    }
+
+                    row.createCell(colNum).setCellValue(value);
                 }
             }
             return workbook;
