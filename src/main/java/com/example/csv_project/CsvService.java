@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -84,7 +85,7 @@ public class CsvService {
 
             System.out.println("=== ZIP 압축 해제 완료. 내부 구조 분석 및 CSV 탐색 시작 ===");
 
-            processAllCsvFiles(tempDir.toString());
+            int result = processAllCsvFiles(tempDir.toString());
 
         } catch (IOException e) {
             System.err.println("ZIP 파일 처리 중 에러 발생: " + e.getMessage());
@@ -95,7 +96,7 @@ public class CsvService {
     /**
      * 2. 압축 해제된 폴더 내부를 탐색하며 처리하는 메서드
      */
-    public void processAllCsvFiles(String rootDirectoryPath) {
+    private int processAllCsvFiles(String rootDirectoryPath, Path savePath) {
         Path rootPath = Paths.get(rootDirectoryPath);
 
 /*        if (!Files.exists(rootPath) || !Files.isDirectory(rootPath)) {
@@ -128,21 +129,27 @@ public class CsvService {
                                 return; // 중복이면 건너뜀
                             }
                             // 3. 매개변수는 .csv 파일
-                            Workbook workbook =  convertExcelService.convertCsvToExcel();
-
-                            //4. 저장
-                            System.out.println("\n[발견된 파일] " + csvPath.getFileName()
-                                    + " 👉 기억한 바로 상위 폴더명 적용 (저장될 엑셀명): " + finalExcelName);
 
                             //convertExcelService 호출부
-                            // 매개변수는 .csv 파일을 전달해주세요
-                            Workbook workbook =  convertExcelService.convertCsvToExcel(csvPath, finalExcelName);
-                            //
+
+                            Workbook workbook =  convertExcelService.convertCsvToExcel(csvPath);
+
+                            //TODO : workbook 저장
+                            //저장 경로 + 변경 파일명.xlsx | changeTitle을 선언할 것
+                            Path excelPath = savePath.resolve(parentFolderName + ".xlsx");
+
+                            OutputStream outputStream = Files.newOutputStream(excelPath);
+                            workbook.write(outputStream);
+                            outputStream.close();;
+                            workbook.close();
+
+
 
                         } catch (Exception e) {
                             System.err.println("파일 처리 중 에러 발생: " + csvPath + " / 원인: " + e.getMessage());
                         }
                     });
+            return 0;
 
         } catch (IOException e) {
             System.err.println("디렉토리 순회 중 에러 발생: " + e.getMessage());
