@@ -5,10 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Component
 public class MyFileUtils {
@@ -20,11 +17,13 @@ public class MyFileUtils {
     }
 
     // fileTitle 이름으로 폴더 생성
-    public void makeFolders(String fileTitle) {
+    public Path makeFolders(String fileTitle) {
         File folder = new File(uploadPath, fileTitle);
 
         if (!folder.exists()) {
             folder.mkdirs();
         }
+
+        return folder.toPath();
     }
 }
