@@ -41,7 +41,7 @@ const showStatus = (message, type = "") => {
 // 진행 표시창 초기화
 const resetProgress = () => {
     progressSection.hidden = true;
-    progressText.textContent = "업로드 중...";
+    progressText.textContent = "実行中";
 };
 
 // ZIP 확장자 검사
@@ -53,14 +53,14 @@ const isZipFile = (file) => {
 const renderFile = () => {
     fileList.replaceChildren();
 
-    fileCount.textContent = selectedFile ? "1개 선택" : "0개 선택";
+    fileCount.textContent = selectedFile ? "1つ選択" : "0つ選択";
     uploadButton.disabled = !selectedFile || uploading;
 
     if (!selectedFile) {
         const empty = document.createElement("li");
 
         empty.className = "empty-state";
-        empty.textContent = "선택한 파일이 없습니다.";
+        empty.textContent = "選択したファイルがありません。";
 
         fileList.appendChild(empty);
         return;
@@ -93,7 +93,7 @@ const renderFile = () => {
     removeButton.textContent = "×";
     removeButton.setAttribute(
         "aria-label",
-        `${selectedFile.name} 제거`
+        `${selectedFile.name} 削除`
     );
     removeButton.disabled = uploading;
 
@@ -120,7 +120,7 @@ const selectFile = (file) => {
     // ZIP 확장자 검사
     if (!isZipFile(file)) {
         fileInput.value = "";
-        showStatus("ZIP 파일만 선택할 수 있습니다.", "error");
+        showStatus("ZIPファイルのみを選択できます。", "error");
         return;
     }
 
@@ -184,7 +184,7 @@ const uploadFile = async () => {
 
     // 업로드 직전 ZIP 확장자 검사
     if (!isZipFile(selectedFile)) {
-        showStatus("ZIP 파일만 업로드할 수 있습니다.", "error");
+        showStatus("ZIPファイルのみを選択できます。", "error");
         return;
     }
 
@@ -201,7 +201,7 @@ const uploadFile = async () => {
 
     // 업로드 중 표시
     progressSection.hidden = false;
-    progressText.textContent = "업로드 중...";
+    progressText.textContent = "実行中";
 
     showStatus("");
 
@@ -217,16 +217,15 @@ const uploadFile = async () => {
 
         // HTTP 오류 처리
         if (!response.ok) {
-            throw new Error(
-                responseText || `요청 실패 (HTTP ${response.status})`
-            );
+            alert(responseText || `error (HTTP ${response.status})`);
+            return;
         }
 
         // 업로드 성공
         // progressText.textContent = "업로드 완료";
 
         showStatus(
-            responseText || "파일 업로드가 완료되었습니다.",
+            responseText || "完了しました.",
             "success"
         );
 
@@ -236,10 +235,10 @@ const uploadFile = async () => {
 
     } catch (error) {
         // 업로드 실패: 파일과 실패 결과 유지
-        progressText.textContent = "업로드 실패";
+        progressText.textContent = "問題が発生しました。";
 
         showStatus(
-            error.message || "파일 업로드 중 오류가 발생했습니다.",
+            error.message || "問題が発生しました。",
             "error"
         );
 
