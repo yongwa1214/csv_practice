@@ -116,26 +116,21 @@ public class CsvService {
 
 
                             //1. 상위폴더명 저장 변수
-
-                            //2. set add >> 중복 검사 true >> 진행 false >> 건너뛰기
-
-                            // 3. 매개변수는 .csv 파일
-                            Workbook workbook =  convertExcelService.convertCsvToExcel();
-
-                            //4. 저장
-                            if (!isNewFolder) {
-                                System.out.println("  ⚠️ 중복된 상위 폴더명 감지됨. 이미 처리되었으므로 건너뜁니다.");
-                                return; // 중복이면 건너뜀
-                            }
-
                             // CSV 파일의 바로 상위 폴더 이름 가져와서 최종 엑셀 파일명 지정
                             String parentFolderName = "unknown_folder";
                             if (csvPath.getParent() != null && csvPath.getParent().getFileName() != null) {
                                 parentFolderName = csvPath.getParent().getFileName().toString();
                             }
-                            String finalExcelName = parentFolderName + ".xlsx";
-                            //
 
+                            //2. set add >> 중복 검사 true >> 진행 false >> 건너뛰기
+                            if (!processedFolders.add(parentFolderName)) {
+                                System.out.println("  ⚠️ 중복된 상위 폴더명 감지됨. 이미 처리되었으므로 건너뜁니다.");
+                                return; // 중복이면 건너뜀
+                            }
+                            // 3. 매개변수는 .csv 파일
+                            Workbook workbook =  convertExcelService.convertCsvToExcel();
+
+                            //4. 저장
                             System.out.println("\n[발견된 파일] " + csvPath.getFileName()
                                     + " 👉 기억한 바로 상위 폴더명 적용 (저장될 엑셀명): " + finalExcelName);
 
