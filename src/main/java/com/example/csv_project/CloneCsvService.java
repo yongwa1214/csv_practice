@@ -97,7 +97,7 @@ public class CloneCsvService {
      * 2. 압축 해제된 폴더 내부를 탐색하며 처리하는 메서드
      */
     // TODO: 매개변수 추가 저장 Path를 얻는다
-    public void processAllCsvFiles(String rootDirectoryPath, Path savePath) {
+    private void processAllCsvFiles(String rootDirectoryPath, Path savePath) {
         Path rootPath = Paths.get(rootDirectoryPath);
 
 /*        if (!Files.exists(rootPath) || !Files.isDirectory(rootPath)) {
@@ -110,44 +110,42 @@ public class CloneCsvService {
         //
 
         try (Stream<Path> pathStream = Files.walk(rootPath)) {
-            pathStream
-                    .filter(Files::isRegularFile)
-                    .filter(path -> path.toString().toLowerCase().endsWith(".csv"))
-                    .forEach(csvPath -> {
-                        try {
+            pathStream.filter(Files::isRegularFile)
+                .filter(path -> path.toString().toLowerCase().endsWith(".csv"))
+                .forEach(csvPath -> {
+                    try {
 
 
-                            //1. 상위폴더명 저장 변수
+                        //1. 상위폴더명 저장 변수
 
-                            //2. set add >> 중복 검사 true >> 진행 false >> 건너뛰기
+                        //2. set add >> 중복 검사 true >> 진행 false >> 건너뛰기
 
-                            // 3. 매개변수는 .csv 파일
-                            Workbook workbook =  convertExcelService.convertCsvToExcel();
+                        // 3. 매개변수는 .csv 파일
+                        //Workbook workbook =  convertExcelService.convertCsvToExcel();
 
-                            //4. 저장
-                            if (!isNewFolder) {
-                                System.out.println("  ⚠️ 중복된 상위 폴더명 감지됨. 이미 처리되었으므로 건너뜁니다.");
-                                return; // 중복이면 건너뜀
-                            }
+                        //4. 저장
+                        if (!isNewFolder) {
+                            System.out.println("  ⚠️ 중복된 상위 폴더명 감지됨. 이미 처리되었으므로 건너뜁니다.");
+                            return; // 중복이면 건너뜀
+                        }
 
-                            // CSV 파일의 바로 상위 폴더 이름 가져와서 최종 엑셀 파일명 지정
-                            String parentFolderName = "unknown_folder";
-                            if (csvPath.getParent() != null && csvPath.getParent().getFileName() != null) {
-                                parentFolderName = csvPath.getParent().getFileName().toString();
-                            }
-                            String finalExcelName = parentFolderName + ".xlsx";
-                            //
+                        // CSV 파일의 바로 상위 폴더 이름 가져와서 최종 엑셀 파일명 지정
+                        String parentFolderName = "unknown_folder";
+                        if (csvPath.getParent() != null && csvPath.getParent().getFileName() != null) {
+                            parentFolderName = csvPath.getParent().getFileName().toString();
+                        }
+                        String finalExcelName = parentFolderName + ".xlsx";
+                        //
 
-                            System.out.println("\n[발견된 파일] " + csvPath.getFileName()
-                                    + " 👉 기억한 바로 상위 폴더명 적용 (저장될 엑셀명): " + finalExcelName);
+                        System.out.println("\n[발견된 파일] " + csvPath.getFileName()
+                                + " 👉 기억한 바로 상위 폴더명 적용 (저장될 엑셀명): " + finalExcelName);
 
-                            //convertExcelService 호출부
-                            // 매개변수는 .csv 파일을 전달해주세요
-//                             Workbook workbook =  convertExcelService.convertCsvToExcel(csvPath);
+                        //convertExcelService 호출부
+                         Workbook workbook =  convertExcelService.convertCsvToExcel(csvPath);
 
-                            //TODO : workbook 저장
-                            //저장 경로 + 변경 파일명.xlsx | changeTitle을 선언할 것
-//                            Path excelPath = savePath.resolve(changeTitle + ".xlsx");
+                        //TODO : workbook 저장
+                        //저장 경로 + 변경 파일명.xlsx | changeTitle을 선언할 것
+//                            Path excelPath = savePath.resolve(parentFolderName + ".xlsx");
 //
 //                            OutputStream outputStream = Files.newOutputStream(excelPath);
 //                            workbook.write(outputStream);
@@ -155,10 +153,10 @@ public class CloneCsvService {
 //                            workbook.close();
 
 
-                        } catch (Exception e) {
-                            System.err.println("파일 처리 중 에러 발생: " + csvPath + " / 원인: " + e.getMessage());
-                        }
-                    });
+                    } catch (Exception e) {
+                        System.err.println("파일 처리 중 에러 발생: " + csvPath + " / 원인: " + e.getMessage());
+                    }
+                });
 
         } catch (IOException e) {
             System.err.println("디렉토리 순회 중 에러 발생: " + e.getMessage());

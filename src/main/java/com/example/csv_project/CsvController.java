@@ -14,7 +14,6 @@ import java.io.IOException;
 public class CsvController {
 
     private final CsvService csvService;
-    private final ConvertExcelService convertExcelService;
 
     // 기능
     @PostMapping("/api/files/upload")
@@ -24,7 +23,7 @@ public class CsvController {
                 || !file.getOriginalFilename().toLowerCase().endsWith(".zip")) {
             return ResponseEntity.badRequest().body("ZIP 파일만 업로드할 수 있습니다.");
         }
-        //csvService.testAndFixEncoding(file); // 활성화는 이쪽
+        csvService.processZipFile(file); // 활성화는 이쪽
         //convertExcelService.convertCsvToExcel(file);
         return ResponseEntity.ok("完了しました");
     }
