@@ -26,4 +26,8 @@ public class MyFileUtils {
 
         return folder.toPath();
     }
+
+    public String getUploadPath() {
+        return uploadPath;
+    }
 }
