@@ -28,23 +28,15 @@ import java.nio.file.Paths;
 public class ConvertExcelService {
 
     /**
-     * 다음 함수는 .csv 파일을 .xlsx로 반환합니다.
-     * 호출한 쪽에서 파일명을 설정하고 폴더에 저장하시면 됩니다.
-    * */
-    public Workbook convertCsvToExcel(MultipartFile csvFile) throws IOException {
+     * UTF-8 인코딩의 .csv 파일 하나를 Workbook으로 변환하여 반환한다.
+     * - CSV 읽기와 파싱은 이 메서드가 전부 담당한다.
+     * - Workbook의 저장과 close()는 호출한 쪽에서 처리한다.
+     * - 변환 중 예외는 호출부로 throw한다.
+     */
+    public Workbook convertCsvToExcel(Path csvPath) throws IOException {
 
-        // UTF-8의 csv파일은 아래로 하면 해당 안된다.
-        //Charset charset = Charset.forName("MS932");
-
-        // CSV 파일을 UTF-8로 읽기
-        String csvContent = new String(
-                csvFile.getBytes(),
-                StandardCharsets.UTF_8
-        );
-
-        Workbook workbook = new XSSFWorkbook();
-
-        try (CSVParser parser = CSVParser.parse(csvContent, CSVFormat.DEFAULT)) {
+        try (CSVParser parser = CSVParser.parse(csvPath, StandardCharsets.UTF_8, CSVFormat.DEFAULT)) {
+            Workbook workbook = new XSSFWorkbook();
             Sheet sheet = workbook.createSheet("Sheet1");
             int rowNum = 0;
 
@@ -56,10 +48,6 @@ public class ConvertExcelService {
                 }
             }
             return workbook;
-        } catch (IOException | RuntimeException e) {
-            // 변환 도중 실패하면 workbook이 누수되지 않도록 닫는다
-            workbook.close();
-            throw new RuntimeException("변환 실패",e);
         }
     }
 }
