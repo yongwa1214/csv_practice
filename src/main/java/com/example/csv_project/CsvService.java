@@ -4,16 +4,14 @@ import com.example.csv_project.common.MyFileUtils;
 import lombok.AllArgsConstructor;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -27,55 +25,63 @@ public class CsvService {
     private final MyFileUtils   myFileUtils;
 
     /**
-     * 1. ZIP 파일을 받아 서버 임시 공간에 압축을 풀고, 내부 폴더 순회 로직으로 연결하는 메인 메서드
+     * ZIP 파일을 받아 서버 임시 공간에 압축을 풀고, 내부 폴더 순회 로직으로 연결하는 메인 메서드
      */
-    public void processZipFile(MultipartFile zipFile) {
+    public void processZipFile(MultipartFile zipFile) throws IOException {
         if (zipFile == null || zipFile.isEmpty()) {
             System.err.println("업로드된 ZIP 파일이 비어 있거나 존재하지 않습니다.");
             return;
         }
 
+        // 💡 finally 블록에서도 참조할 수 있도록 try 블록 바깥에 미리 선언
+        Path tempDir = null;
+
         try {
             // 폴더 생성
             String originName = zipFile.getOriginalFilename();
-            String filename = zipFile.getOriginalFilename().substring(0,originName.lastIndexOf("."));
+            if (originName != null) {
+                String filename = originName.substring(0, originName.lastIndexOf("."));
+                Path savePath = myFileUtils.makeFolders(filename);
 
-            Path savePath = myFileUtils.makeFolders(filename);
+                // ZIP 파일 압축 해제 경로 생성
+                tempDir = Files.createTempDirectory("csv_unzip_");
+                System.out.println("=== ZIP 압축 해제 시작: " + zipFile.getOriginalFilename() + " ===");
 
-            //집파일 열고
+                try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream(), Charset.forName("MS932"))) {
+                    ZipEntry zipEntry;
 
-            Path tempDir = Files.createTempDirectory("csv_unzip_");
-            System.out.println("=== ZIP 압축 해제 시작: " + zipFile.getOriginalFilename() + " ===");
+                    while ((zipEntry = zis.getNextEntry()) != null) {
+                        Path resolvedPath = tempDir.resolve(zipEntry.getName()).normalize();
 
-
-            try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream(), Charset.forName("MS932"))) {
-                ZipEntry zipEntry;
-
-                while ((zipEntry = zis.getNextEntry()) != null) {
-                    Path resolvedPath = tempDir.resolve(zipEntry.getName()).normalize();
-
-                    if (!resolvedPath.startsWith(tempDir)) {
-                        throw new IOException("잘못된 경로의 ZIP 엔트리가 감지되었습니다: " + zipEntry.getName());
-                    }
-
-                    if (zipEntry.isDirectory()) {
-                        Files.createDirectories(resolvedPath);
-                    } else {
-                        if (resolvedPath.getParent() != null) {
-                            Files.createDirectories(resolvedPath.getParent());
+                        if (!resolvedPath.startsWith(tempDir)) {
+                            throw new IOException("잘못된 경로의 ZIP 엔트리가 감지되었습니다: " + zipEntry.getName());
                         }
-                        Files.copy(zis, resolvedPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                        if (zipEntry.isDirectory()) {
+                            Files.createDirectories(resolvedPath);
+                        } else {
+                            if (resolvedPath.getParent() != null) {
+                                Files.createDirectories(resolvedPath.getParent());
+                            }
+                            Files.copy(zis, resolvedPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        }
+                        zis.closeEntry();
                     }
-                    zis.closeEntry();
                 }
+
+                System.out.println("=== ZIP 압축 해제 완료. 내부 구조 분석 및 CSV 탐색 시작 ===");
+
+                int result = processAllCsvFiles(tempDir, savePath);
             }
-
-            System.out.println("=== ZIP 압축 해제 완료. 내부 구조 분석 및 CSV 탐색 시작 ===");
-
-            int result = processAllCsvFiles(tempDir,savePath );
 
         } catch (IOException e) {
             System.err.println("ZIP 파일 처리 중 에러 발생: " + e.getMessage());
+        } finally {
+            // 💡 성공하든, 중간에 예외가 터져서 catch로 빠지든 작업이 끝나면 무조건 임시 폴더 삭제
+            if (tempDir != null) {
+                FileSystemUtils.deleteRecursively(tempDir);
+                System.out.println("=== 임시 디렉토리 정리 완료 ===");
+            }
         }
     }
 
