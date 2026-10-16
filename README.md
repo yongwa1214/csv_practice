@@ -21,6 +21,8 @@
 4. 変換したファイルを保存
 
 ## 2. 画面の説明
+<img width="808" height="782" alt="スクリーンショット 2026-10-16 143139" src="https://github.com/user-attachments/assets/bb6cc509-f248-4a7e-9309-9c6c5a2b0f03" />
+
 
 ### 2.1. ファイルのアップロード
 
