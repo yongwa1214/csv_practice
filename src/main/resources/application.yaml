@@ -1,6 +1,6 @@
 constants:
   file:
-    directory: C:\testCsv
+    directory: C:\0_Excel_Converted
 
 spring:
   application:
