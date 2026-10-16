@@ -78,7 +78,12 @@ public class CsvService {
             savePath =  myFileUtils.makeFolders(fileName);
             processAllCsvFiles(tempDir, savePath);
 
-        } finally {
+        }catch (Exception e) {
+            if (savePath != null) {
+                FileSystemUtils.deleteRecursively(savePath.toFile());
+            }
+            throw e;
+        }finally {
             // 💡 작업이 끝나면 무조건 임시 폴더 삭제
             if (tempDir != null) {
                 FileSystemUtils.deleteRecursively(tempDir);
