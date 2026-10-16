@@ -78,7 +78,12 @@ public class CsvService {
             savePath =  myFileUtils.makeFolders(fileName);
             processAllCsvFiles(tempDir, savePath);
 
-        } finally {
+        }catch (Exception e) {
+            if (savePath != null) {
+                FileSystemUtils.deleteRecursively(savePath.toFile());
+            }
+            throw e;
+        }finally {
             // 💡 작업이 끝나면 무조건 임시 폴더 삭제
             if (tempDir != null) {
                 FileSystemUtils.deleteRecursively(tempDir);
@@ -90,11 +95,11 @@ public class CsvService {
     /**
      * 2. 압축 해제된 폴더 내부를 탐색하며 처리하는 메서드
      */
-    private void processAllCsvFiles(Path rootPath, Path savePath) throws IOException {
+    private void processAllCsvFiles(Path tempDir, Path savePath) throws IOException {
         // 중복 폴더명 체크
         Set<String> processedFolders = new HashSet<>();
 
-        try (Stream<Path> pathStream = Files.walk(rootPath)) {
+        try (Stream<Path> pathStream = Files.walk(tempDir)) {
 
             for (Path csvPath : (Iterable<Path>) () -> pathStream
                     .filter(Files::isRegularFile)
@@ -102,10 +107,13 @@ public class CsvService {
                     .iterator()) {
 
                 // 1. 상위 폴더명 추출
-                String parentFolderName = "unknown_folder";
-                if (csvPath.getParent() != null && csvPath.getParent().getFileName() != null) {
-                    parentFolderName = csvPath.getParent().getFileName().toString();
-                }
+                // 주석: 상위 폴더명이 없을 경우 동작 | 보완 필요
+//                String parentFolderName = "unknown_folder";
+//                if (csvPath.getParent() != null && csvPath.getParent().getFileName() != null) {
+//                    parentFolderName = csvPath.getParent().getFileName().toString();
+//                }
+
+                String parentFolderName = csvPath.getParent().getFileName().toString();
 
                 // 2. 중복 폴더명 검사
                 if (!processedFolders.add(parentFolderName)) {
